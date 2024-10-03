@@ -24,3 +24,13 @@ In 3 tosses, the 4th row of Pascal's Triangle (1, 3, 3, 1) tells us (we don't co
 
 - conclusion : This is why there are 3 ways to get exactly 2 tails.
 <p> 3/8 *100% = 37.5% </p>
+
+- Example 2: A coin is tossed 4 times, find the probability of getting exactly 3 heads.
+- 2^4 = 16 
+- we are going to look at the row 5 in pascal traingle (1,4,6,4,1)
+    - 1 way to get 0 heads (HHHH)
+    - 4 way to get 1 heads (TTTH, TTHT, THTT, HTTT).
+    - 6 way to get 2 heads (TTHH, THTH, HTTH, THHT, HHTT).
+    - 4 way to get 3 heads (THHH, HTHH, HHTH, HHHT).
+    - 1 way to get 4 heads (HHHH)
+- 4/16 * 100% = 25%
