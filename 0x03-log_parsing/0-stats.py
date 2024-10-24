@@ -19,7 +19,7 @@ if __name__ == '__main__':
         Prints accumulated metrics:
         total file size and status code counts.
         """
-        print("File size: {:d}".format(file_size))
+        print("File size: {}".format(file_size))
         for k, v in sorted(stats.items()):
             if v:
                 print("{}: {}".format(k, v))
@@ -27,16 +27,15 @@ if __name__ == '__main__':
     try:
         # Read each line from stdin
         for line in sys.stdin:
+            line = line.strip()
             count += 1
             data = line.split()
 
             # Update status code counts
-            try:
+            if len(data) > 2:
                 status_code = data[-2]
                 if status_code in stats:
                     stats[status_code] += 1
-            except (IndexError, ValueError):
-                pass
 
             # Update total file size
             try:
