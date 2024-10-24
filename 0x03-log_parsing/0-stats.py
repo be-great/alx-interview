@@ -1,56 +1,74 @@
 #!/usr/bin/python3
 """
-Log parsing script that computes and prints metrics:
-- Total file size
-- Number of occurrences of specific status codes
+Log parsing script that processes input line by line to compute statistics.
+- Calculates the total file size
+- Tracks the number of occurrences of specific HTTP status codes
 """
+
 import sys
+import re
 
 
-if __name__ == '__main__':
-    # Initialize total file size and line counter
-    filesize, count = 0, 0
-    # Define possible status codes and initialize their counters
-    codes = ["200", "301", "400", "401", "403", "404", "405", "500"]
-    stats = {k: 0 for k in codes}
+def display_stats(log_data: dict) -> None:
+    """
+    Helper function to display the current log statistics.
+    This function prints the total file size and the count
+    of each status code if it has been encountered.
 
-    def print_stats(stats: dict, file_size: int) -> None:
-        """
-        Prints accumulated metrics:
-        total file size and status code counts.
-        """
-        print("File size: {}".format(file_size))
-        for k, v in sorted(stats.items()):
-            if v:
-                print("{}: {}".format(k, v))
+    Args:
+        log_data (dict): A dictionary containing the accumulated
+                         file size and code frequency.
+    """
+    print("File size: {}".format(log_data["total_size"]))
+    for status_code in sorted(log_data["status_counts"]):
+        if log_data["status_counts"][status_code]:
+            print("{}: {}".format(
+                status_code,
+                log_data["status_counts"][status_code]
+            ))
+
+
+if __name__ == "__main__":
+    # Regular expression to match log format
+    # (IP, date, request, status code, file size)
+    log_pattern = re.compile(
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} - '
+        + '\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+\] '
+        r'"GET /projects/260 HTTP/1.1" (.{3}) (\d+)'  # noqa: E501
+    )
+
+    # Initialize variables to store log data and line count
+    line_counter = 0
+    log_data = {
+        "total_size": 0,
+        "status_counts": {
+            str(code): 0 for code in [200, 301, 400, 401, 403, 404, 405, 500]
+        }
+    }
 
     try:
-        # Read each line from stdin
+        # Read each line from standard input (e.g., piped log file)
         for line in sys.stdin:
             line = line.strip()
-            count += 1
-            data = line.split()
 
-            # Update status code counts
-            if len(data) > 2:
-                status_code = data[-2]
-                if status_code in stats:
-                    stats[status_code] += 1
+            # Check if the line matches the log pattern
+            match = log_pattern.fullmatch(line)
+            if match:
+                line_counter += 1
+                status_code = match.group(1)
+                file_size = int(match.group(2))
 
-            # Update total file size
-            try:
-                filesize += int(data[-1])
-            except (IndexError, ValueError):
-                pass
+                # Update total file size
+                log_data["total_size"] += file_size
 
-            # Print stats every 10 lines
-            if count % 10 == 0:
-                print_stats(stats, filesize)
+                # Update status code frequency if the status code is a number
+                if status_code.isdecimal():
+                    log_data["status_counts"][status_code] += 1
 
-        # Print final stats after processing all lines
-        print_stats(stats, filesize)
+                # Display stats after every 10 lines of input
+                if line_counter % 10 == 0:
+                    display_stats(log_data)
 
-    except KeyboardInterrupt:
-        # Print stats on keyboard interruption (CTRL + C)
-        print_stats(stats, filesize)
-        raise
+    finally:
+        # Always display final stats at the end
+        display_stats(log_data)
