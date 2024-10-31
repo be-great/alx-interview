@@ -13,6 +13,8 @@ def validUTF8(data):
     num_bytes = 0
     for byte in data:
         # Get the binary representation of the byte, padded to 8 bits
+        if byte < 0 or byte > 255:
+            return False
         byte_bin = format(byte, '08b')
 
         if num_bytes == 0:
