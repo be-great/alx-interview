@@ -17,18 +17,30 @@ request(url, (err, response, body) => {
   }
 
   const movie = JSON.parse(body);
-  const characters = movie.characters;
+  const characterUrls = movie.characters;
 
-  characters.forEach((charUrl) => {
-    request(charUrl, (err1, response1, body1) => {
-      if (err1) {
-        console.error(err1);
-        return;
-      }
-
-      const character = JSON.parse(body1);
-      console.log(character.name);
+  // Create an array of Promises for each character request
+  const characterPromises = characterUrls.map((charUrl) => {
+    return new Promise((resolve, reject) => {
+      request(charUrl, (err, response, body) => {
+        if (err) {
+          reject(err);
+        } else {
+          const character = JSON.parse(body);
+          resolve(character.name);
+        }
+      });
     });
   });
-});
 
+  // Wait for all character requests to complete
+  Promise.all(characterPromises)
+    .then((characterNames) => {
+      characterNames.forEach((name) => {
+        console.log(name);
+      });
+    })
+    .catch((error) => {
+      console.error('Error fetching character names:', error);
+    });
+});
